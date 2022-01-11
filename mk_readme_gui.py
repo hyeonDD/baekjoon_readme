@@ -5,8 +5,9 @@ from markdownify import markdownify as md
 import requests
 from bs4 import BeautifulSoup
 import os
+import argparse
 
-path= os.path.dirname(os.path.abspath(__file__))
+# path= os.path.dirname(os.path.abspath(__file__))
 
 class autoBaekjoon:
 
@@ -66,7 +67,8 @@ class mkReadmeGUI(QWidget):
                         
     def initUI(self):
         self.setWindowTitle('입력창')        
-        self.setWindowIcon(QIcon('keyboard.png'))
+        self.setWindowIcon(QIcon('.\\img\\keyboard.png'))
+        # self.setFixedSize(260,100)
         self.setFixedSize(260,70)
         pal = QPalette()
         pal.setColor(QPalette.Background,QColor(255,255,255))
@@ -78,16 +80,20 @@ class mkReadmeGUI(QWidget):
         self.button.clicked.connect(self.takeTextFunction)
                 
         self.label = QLabel(self)
+        # self.label2 = QLabel(self)
+        # self.label2.setText(f"경로:{path}")
         
         self.line_edit = QLineEdit(self)        
         self.line_edit.setValidator(QIntValidator(1000,40000,self))        
         self.line_edit.returnPressed.connect(self.takeTextFunction)
         
         # layout = QHBoxLayout() # 수평 박스 레이아웃 사용
-        layout = QGridLayout() # 격자 레이아웃 사용
+        layout = QGridLayout() # 격자 레이아웃 사용        
         layout.addWidget(self.line_edit,0,0)
         layout.addWidget(self.button,0,1)
         layout.addWidget(self.label,1,0)
+        # layout.addWidget(self.label2,1,0)
+
 
         self.setLayout(layout)
 
@@ -100,7 +106,7 @@ class mkReadmeGUI(QWidget):
             else:
                 global problem_num
                 problem_num = int(self.line_edit.text())
-                print(f'문제번호 : {problem_num}')                
+                # print(f'문제번호 : {problem_num}')                
                 self.label.setHidden(True) # 성공일시 ValueError 메세지를 숨김.
                 self.baekjoonParsing(problem_num)
         except ValueError:
@@ -144,8 +150,26 @@ class mkReadmeGUI(QWidget):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+def get_arguments():
+    parser = argparse.ArgumentParser(description="README.md 자동작성 프로그램")
+    parser.add_argument('-v', '--version', required=False, help="Show version.", action='store_true')
+    parser.add_argument('-p', '--path', required=True, help="Input directory path.")
+    
+    args = parser.parse_args()
+    # print(f"args : {args}")
+    if args.version:        
+        print("version: v1.0.0")
+        sys.exit(0)
+    return args.path
 
-if __name__ == '__main__':
+if __name__ == '__main__':    
+    try:
+        os.chdir(sys._MEIPASS)
+        print(sys._MEIPASS)
+    except:
+        os.chdir(os.getcwd())    
+    
+    path = get_arguments()
     app = QApplication(sys.argv)
     ex = mkReadmeGUI()
     
