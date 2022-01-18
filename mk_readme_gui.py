@@ -1,13 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QGridLayout, QHBoxLayout, QWidget, QLabel, QLineEdit, QDesktopWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QGridLayout, QWidget, QLabel, QLineEdit, QDesktopWidget, QPushButton
 from PyQt5.QtGui import QIcon, QIntValidator, QPalette, QColor
 from markdownify import markdownify as md
 import requests
 from bs4 import BeautifulSoup
 import os
 import argparse
-
-# path= os.path.dirname(os.path.abspath(__file__))
 
 class autoBaekjoon:
 
@@ -48,13 +46,13 @@ class autoBaekjoon:
                 if i % 2 == 0:
                     f.write(f"\n### 예제 입력{cnt}\n\n")
                     f.write("```\n")
-                    f.write(sample_data[i])
-                    f.write("```\n")
+                    f.write(sample_data[i].rstrip())
+                    f.write("\n```\n")
                 else :
                     f.write(f"\n### 예제 출력{cnt}\n\n")
                     f.write("```\n")
-                    f.write(sample_data[i])
-                    f.write("```\n")
+                    f.write(sample_data[i].rstrip())                    
+                    f.write("\n```\n")
                     cnt += 1
                 
             f.write(f"""\n### 링크\n<a href="https://www.acmicpc.net/problem/{problem_num}" target="_blank">{problem_num}</a>""")
@@ -69,7 +67,7 @@ class mkReadmeGUI(QWidget):
         self.setWindowTitle('입력창')        
         self.setWindowIcon(QIcon('.\\img\\keyboard.png'))
         # self.setFixedSize(260,100)
-        self.setFixedSize(260,70)
+        self.setFixedSize(260,80)
         pal = QPalette()
         pal.setColor(QPalette.Background,QColor(255,255,255))
         self.setAutoFillBackground(True)
@@ -79,7 +77,9 @@ class mkReadmeGUI(QWidget):
         self.button = QPushButton('&입력',self)
         self.button.clicked.connect(self.takeTextFunction)
                 
-        self.label = QLabel(self)
+        self.label = QLabel(self)                                
+        # self.label.resize(260,300)        
+
         # self.label2 = QLabel(self)
         # self.label2.setText(f"경로:{path}")
         
@@ -91,9 +91,8 @@ class mkReadmeGUI(QWidget):
         layout = QGridLayout() # 격자 레이아웃 사용        
         layout.addWidget(self.line_edit,0,0)
         layout.addWidget(self.button,0,1)
-        layout.addWidget(self.label,1,0)
+        layout.addWidget(self.label,1,0,1,0)
         # layout.addWidget(self.label2,1,0)
-
 
         self.setLayout(layout)
 
@@ -105,15 +104,23 @@ class mkReadmeGUI(QWidget):
                 raise ValueError
             else:
                 global problem_num
-                problem_num = int(self.line_edit.text())
-                # print(f'문제번호 : {problem_num}')                
-                self.label.setHidden(True) # 성공일시 ValueError 메세지를 숨김.
+                problem_num = int(self.line_edit.text())                
                 self.baekjoonParsing(problem_num)
         except ValueError:
-            self.label.setHidden(False)
-            self.label.setText("입력값이 잘못되었습니다")
+            self.showLabel("입력값이 잘못되었습니다.")                        
+
+    def showLabel(self,string, level=-1):
+        # default 는 성공/실패 에따른 텍스트 색상 -1 : red 이외 black
+        self.label.setHidden(False)
+        if string.__len__() > 23:
+            self.label.setText(string[:24]+'\n'+string[24:]) # 32
+        else:
+            self.label.setText(string)
+        
+        if level == -1:        
             self.label.setStyleSheet("color: red")
-            self.label.adjustSize()
+        else:
+            self.label.setStyleSheet("color: green")
     
     def baekjoonParsing(self, problem_num):
         auto = autoBaekjoon()
@@ -132,17 +139,13 @@ class mkReadmeGUI(QWidget):
                 ex_output = md(str(ex_output[0])).strip('\n')    
 
                 sample_data = [i.text for i in auto.parsing(".sampledata")] # 예제 입,출력
-                auto.mkreadme(title,description,ex_input,ex_output,sample_data) # readme 파일 생성    
+                auto.mkreadme(title,description,ex_input,ex_output,sample_data) # readme 파일 생성                
+                self.showLabel(f"readme를 작성했습니다 경로:{path}\\{problem_num}",0)
             except FileExistsError:
-                self.label.setHidden(False)
-                self.label.setText("폴더가 이미존재합니다")
-                self.label.setStyleSheet("color: red")
-                self.label.adjustSize()
+                self.showLabel(f"폴더가 이미존재합니다.{path}\\{problem_num}")
+                
         except IndexError:
-            self.label.setHidden(False)
-            self.label.setText("없는 문제입니다.")
-            self.label.setStyleSheet("color: red")
-            self.label.adjustSize()            
+            self.showLabel("없는 문제입니다.")
 
     def center(self): # 화면 중앙에 위치시켜주는 메서드
         qr = self.frameGeometry()
@@ -151,25 +154,31 @@ class mkReadmeGUI(QWidget):
         self.move(qr.topLeft())
 
 def get_arguments():
-    parser = argparse.ArgumentParser(description="README.md 자동작성 프로그램")
-    parser.add_argument('-v', '--version', required=False, help="Show version.", action='store_true')
-    parser.add_argument('-p', '--path', required=True, help="Input directory path.")
-    
+    parser = argparse.ArgumentParser(description="README.md 자동작성 프로그램")    
+    parser.add_argument("-v", "--version", action="store_true", help="show version")
+    parser.add_argument('-p', '--path', help="Input directory path.")
+        
     args = parser.parse_args()
-    # print(f"args : {args}")
+
     if args.version:        
-        print("version: v1.0.0")
+        print("version: v1.0.1")
         sys.exit(0)
     return args.path
 
-if __name__ == '__main__':    
-    try:
+if __name__ == '__main__':        
+    try: # pyinstaller -F(exe파일 1개로만 생성) 옵션을 사용해 appdata 밑의 img\\keyboard.png 이미를 찾기위해 사용
         os.chdir(sys._MEIPASS)
         print(sys._MEIPASS)
     except:
-        os.chdir(os.getcwd())    
+        os.chdir(os.getcwd())
+
+    path = get_arguments()    
+    if not path :
+        if getattr(sys, "frozen", False):            
+            path = os.path.dirname(sys.executable)
+        else:            
+            path = os.path.dirname(os.path.abspath(__file__))
     
-    path = get_arguments()
     app = QApplication(sys.argv)
     ex = mkReadmeGUI()
     
