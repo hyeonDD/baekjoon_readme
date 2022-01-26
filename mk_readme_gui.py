@@ -131,7 +131,10 @@ class mkReadmeGUI(QWidget):
                 os.makedirs(f"{path}\{problem_num}") # 디렉터리 생성
                 description = auto.parsing("#problem_description") # 문제설명
                 description = md(str(description[0])).strip('\n')
-                
+                print(description.find('![](/'))
+                if description.find('![](/') > -1:
+                    description = description.replace('![](/','![](https://www.acmicpc.net/')
+
                 ex_input = auto.parsing("#problem_input > p") # 입력        
                 ex_input = md(str(ex_input[0])).strip('\n')    
 
