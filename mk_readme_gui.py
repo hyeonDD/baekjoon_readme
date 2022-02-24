@@ -11,7 +11,8 @@ class autoBaekjoon:
 
     def __init__(self) -> None:
         headers = {            
-            'User-Agent':'python-requests/2.24.0'}
+            'User-Agent':'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+            }
         URL = f'https://www.acmicpc.net/problem/{problem_num}'
         html = requests.get(URL, headers=headers)
         self.soup = BeautifulSoup(html.content, 'html.parser')
